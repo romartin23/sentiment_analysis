@@ -15,13 +15,13 @@ import java.util.Arrays;
 public class SentimentAnalysisService {
 
     @RequestMapping(value = "/sentiment", produces = "application/json", method = RequestMethod.POST)
-    public @ResponseBody Comment sentiment(@RequestBody Comment comment) {
+    public @ResponseBody CommentSentiment sentiment(@RequestBody Comment comment) {
         try {
             //Creating the dataframe to execute the model.
             DataFrame training = Application.sqlContext.createDataFrame(
                 Arrays.asList(
-                    comment
-                ), Comment.class);
+                   new CommentSentiment(-1d,comment.getReview())
+                ), CommentSentiment.class);
 
             //Executing the model (pipeline).
             DataFrame predictions =  Application.model.transform(training);
@@ -30,10 +30,10 @@ public class SentimentAnalysisService {
             Row r = predictions.select("probability", "prediction").collect()[0];
 
             //Creating the response.
-            return new Comment( (Double) r.get(1), comment.getReview());
+            return new CommentSentiment( (Double) r.get(1), comment.getReview());
         }catch (Throwable e) {
             e.printStackTrace();
         }
-        return new Comment( -1d, "ERROR");
+        return new CommentSentiment( -1d, "ERROR");
     }
 }
